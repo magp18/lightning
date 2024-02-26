@@ -20,6 +20,8 @@ and this project adheres to
 ### Changed
 - Stop sending `operating_system_detail` to the usage tracker
   [#1785](https://github.com/OpenFn/lightning/issues/1785)
+- Change bucket size used by the run queue delay custom metric.
+  [#1790](https://github.com/OpenFn/lightning/issues/1790)
 
 ### Fixed
 - Make handling of usage tracking errors more robust.
@@ -41,8 +43,7 @@ and this project adheres to
   [#1742](https://github.com/OpenFn/lightning/issues/1742)
 - Usage Tracking submissions will now run daily rather than hourly.
   [#1742](https://github.com/OpenFn/lightning/issues/1742)
-- Change bucket size used by the run queue delay custom metric.
-  [#1790](https://github.com/OpenFn/lightning/issues/1790)
+
 - Bumped @openfn/ws-worker to `v1.0` (this is used in dev mode when starting the
   worker from your mix app: `RTM=true iex -S mix phx.server`)
 - Bumped @openfn/cli to `v1.0` (this is used for adaptor docs and magic)
