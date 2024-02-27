@@ -144,7 +144,8 @@ defmodule Lightning.Runs.PromExPlugin do
         last_value(
           [:lightning, :run, :queue, :finalised, :count],
           event_name: @finalised_count_event,
-          description: "The number of runs finalised during the consideration window",
+          description:
+            "The number of runs finalised during the consideration window",
           measurement: :count
         )
       ]
@@ -157,7 +158,11 @@ defmodule Lightning.Runs.PromExPlugin do
 
       trigger_run_claim_duration(run_age_seconds)
       trigger_available_runs_count()
-      trigger_finalised_runs_count(DateTime.utc_now(), consideration_window_seconds)
+
+      trigger_finalised_runs_count(
+        DateTime.utc_now(),
+        consideration_window_seconds
+      )
     end
   end
 
@@ -234,11 +239,12 @@ defmodule Lightning.Runs.PromExPlugin do
 
   def count_finalised_runs(now, consideration_window_seconds) do
     threshold_time = DateTime.add(now, -consideration_window_seconds)
-    final_states = Run.final_states
+    final_states = Run.final_states()
 
-    query = from r in Run,
-      where: r.state in ^final_states,
-      where: r.finished_at > ^threshold_time
+    query =
+      from r in Run,
+        where: r.state in ^final_states,
+        where: r.finished_at > ^threshold_time
 
     query |> Repo.aggregate(:count)
   end

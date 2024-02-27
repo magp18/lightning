@@ -124,14 +124,14 @@ defmodule Lightning.Runs.PromExPluginText do
           :run,
           :queue,
           :available,
-          :count,
+          :count
         ])
 
       assert(
         %Telemetry.Metrics.LastValue{
           event_name: [:lightning, :run, :queue, :available],
           description: "The number of available runs in the queue",
-          measurement: :count,
+          measurement: :count
         } = metric
       )
     end
@@ -147,14 +147,15 @@ defmodule Lightning.Runs.PromExPluginText do
           :run,
           :queue,
           :finalised,
-          :count,
+          :count
         ])
 
       assert(
         %Telemetry.Metrics.LastValue{
           event_name: [:lightning, :run, :queue, :finalised],
-          description: "The number of runs finalised during the consideration window",
-          measurement: :count,
+          description:
+            "The number of runs finalised during the consideration window",
+          measurement: :count
         } = metric
       )
     end
@@ -327,17 +328,22 @@ defmodule Lightning.Runs.PromExPluginText do
         )
 
       now = DateTime.utc_now()
+
       _excluded_not_finalised =
         now |> run_with_finished_at(0, :available)
+
       _excluded_outside_window =
-        now 
+        now
         |> run_with_finished_at(-(@queue_metrics_period_seconds + 1), :success)
+
       _included_finalised_1 =
         now
         |> run_with_finished_at(0, :cancelled)
+
       _included_finalised_2 =
         now
         |> run_with_finished_at(0, :success)
+
       _included_finalised_3 =
         now
         |> run_with_finished_at(0, :failed)
@@ -374,7 +380,6 @@ defmodule Lightning.Runs.PromExPluginText do
       ) do
         PromExPlugin.run_queue_metrics(age, @queue_metrics_period_seconds)
       end
-
 
       refute_received {
         ^available_event,
@@ -471,7 +476,7 @@ defmodule Lightning.Runs.PromExPluginText do
       window_seconds = 10
       include_offset = -(window_seconds - 1)
       exclude_offset = -(window_seconds + 1)
-      final_states = Run.final_states
+      final_states = Run.final_states()
 
       finalised_count = Enum.count(final_states)
 
@@ -484,11 +489,13 @@ defmodule Lightning.Runs.PromExPluginText do
 
       _excluded_outside_window_1 =
         now |> run_with_finished_at(exclude_offset, hd(final_states))
+
       _excluded_outside_window_2 =
         now |> run_with_finished_at(exclude_offset, hd(final_states))
-      _excluded_not_finalised = 
+
+      _excluded_not_finalised =
         now |> run_with_finished_at(include_offset, :available)
-      
+
       assert(
         PromExPlugin.count_finalised_runs(now, window_seconds) == finalised_count
       )
