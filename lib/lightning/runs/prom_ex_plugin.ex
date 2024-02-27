@@ -206,11 +206,9 @@ defmodule Lightning.Runs.PromExPlugin do
   defp trigger_available_runs_count do
     query = from r in Run, where: r.state == :available
 
-    count = query |> Repo.aggregate(:count)
-
     :telemetry.execute(
       @available_count_event,
-      %{count: count},
+      %{count: Repo.aggregate(query, :count)},
       %{}
     )
   end
