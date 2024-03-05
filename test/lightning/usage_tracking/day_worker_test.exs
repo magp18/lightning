@@ -36,13 +36,13 @@ defmodule Lightning.UsageTracking.DayWorkerTest do
 
       expected_dates = Date.range(first_report_date, last_report_date)
 
-      ConfigurationManagementService.enable(now)
+      ConfigurationManagementService.enable(enabled_at)
 
       Oban.Testing.with_testing_mode(:manual, fn->
         DayWorker.perform(%{})
 
         for date <- expected_dates do
-          assert_enqueued worker: ReportWorker, args: %{date: date}
+          assert_enqueued worker: ReportWorker, args: %{date: date}, queue: :background
         end
       end)
     end
