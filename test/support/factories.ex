@@ -147,6 +147,17 @@ defmodule Lightning.Factories do
     }
   end
 
+  def usage_tracking_report_factory do
+    now = DateTime.utc_now()
+
+    %Lightning.UsageTracking.Report{
+      data: %{},
+      submitted: true,
+      submitted_at: now,
+      report_date: DateTime.to_date(now)
+    }
+  end
+
   # ----------------------------------------------------------------------------
   # Helpers
   # ----------------------------------------------------------------------------

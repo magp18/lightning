@@ -8,13 +8,26 @@ defmodule Lightning.UsageTracking.DayWorker do
     max_attempts: 1
 
   alias Lightning.UsageTracking.ConfigurationManagementService
+  alias Lightning.UsageTracking.ReportDateService
+  alias Lightning.UsageTracking.ReportWorker
 
   @impl Oban.Worker
   def perform(_opts) do
     env = Application.get_env(:lightning, :usage_tracking)
 
+    now = DateTime.utc_now()
+
     if env[:enabled] do
-      ConfigurationManagementService.enable(DateTime.utc_now())
+      %{start_reporting_after: start_after} =
+        ConfigurationManagementService.enable(now)
+
+      dates =
+        ReportDateService.reportable_dates(start_after, DateTime.to_date(now))
+
+      IO.inspect(start_after)
+      IO.inspect
+
+      for date <- dates,  do: ReportWorker.perform(%{date: date})
     else
       ConfigurationManagementService.disable()
     end
