@@ -91,22 +91,13 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
     end
 
     test "updates the config based on reportable dates", config do
-      %{reference_time: reference_time} = config
+      %{
+        enabled_at: enabled_at,
+        reference_time: reference_time,
+        reportable_dates: reportable_dates
+      } = config
 
-      enabled_at = DateTime.add(reference_time, -@range_in_days, :day)
-      first_report_date =
-        enabled_at
-        |> DateTime.add(1, :day)
-        |> DateTime.to_date()
-      last_report_date =
-        reference_time
-        |> DateTime.add(-1, :day)
-        |> DateTime.to_date()
-
-      [report_date_1 | [report_date_2 | _other_dates]] =
-        first_report_date
-        |> Date.range(last_report_date)
-        |> Enum.to_list()
+      [report_date_1 | [report_date_2 | _other_dates]] = reportable_dates
 
       # Add some existing reports so that the start_reporting_after will take
       # these into account
