@@ -4,7 +4,7 @@ defmodule Lightning.UsageTracking.ReportDateService do
   alias Lightning.Repo
   alias Lightning.UsageTracking.Report
 
-  def reportable_dates(start_after, today) do
+  def reportable_dates(start_after, today, batch_size) do
     case Date.diff(today, start_after) do
       diff when diff > 2 ->
         start_date = start_after |> Date.add(1)
@@ -14,6 +14,7 @@ defmodule Lightning.UsageTracking.ReportDateService do
 
         candidate_dates
         |> remove_existing_dates()
+        |> Enum.take(batch_size)
       _ -> []
     end
   end

@@ -12,7 +12,7 @@ defmodule Lightning.UsageTracking.DayWorker do
   alias Lightning.UsageTracking.ReportWorker
 
   @impl Oban.Worker
-  def perform(_opts) do
+  def perform(%{args: %{"batch_size" => batch_size}}) do
     env = Application.get_env(:lightning, :usage_tracking)
 
     now = DateTime.utc_now()
@@ -22,7 +22,11 @@ defmodule Lightning.UsageTracking.DayWorker do
         ConfigurationManagementService.enable(now)
 
       dates =
-        ReportDateService.reportable_dates(start_after, DateTime.to_date(now))
+        ReportDateService.reportable_dates(
+          start_after,
+          DateTime.to_date(now),
+          batch_size
+        )
 
       for date <- dates, do: Oban.insert(Lightning.Oban, ReportWorker.new(%{date: date}))
     else
