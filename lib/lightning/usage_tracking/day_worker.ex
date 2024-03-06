@@ -21,13 +21,10 @@ defmodule Lightning.UsageTracking.DayWorker do
       %{start_reporting_after: start_after} =
         ConfigurationManagementService.enable(now)
 
-      IO.inspect(start_after)
-      IO.inspect(now)
       dates =
         ReportDateService.reportable_dates(start_after, DateTime.to_date(now))
 
-      IO.inspect(dates)
-      for date <- dates, do: Oban.insert(ReportWorker.new(%{date: date}))
+      for date <- dates, do: Oban.insert(Lightning.Oban, ReportWorker.new(%{date: date}))
     else
       ConfigurationManagementService.disable()
     end
