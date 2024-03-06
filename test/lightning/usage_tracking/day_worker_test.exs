@@ -35,7 +35,7 @@ defmodule Lightning.UsageTracking.DayWorkerTest do
 
       ConfigurationManagementService.enable(enabled_at)
 
-      Oban.Testing.with_testing_mode(:manual, fn->
+      Oban.Testing.with_testing_mode(:manual, fn ->
         perform_job(DayWorker, %{batch_size: @batch_size})
       end)
 
@@ -43,9 +43,7 @@ defmodule Lightning.UsageTracking.DayWorkerTest do
     end
 
     test "returns :ok" do
-      assert(
-        perform_job(DayWorker, %{batch_size: @batch_size}) == :ok
-      )
+      assert(perform_job(DayWorker, %{batch_size: @batch_size}) == :ok)
     end
   end
 

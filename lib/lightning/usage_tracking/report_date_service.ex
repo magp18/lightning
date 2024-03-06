@@ -12,6 +12,7 @@ defmodule Lightning.UsageTracking.ReportDateService do
     case Date.diff(today, start_after) do
       diff when diff > 2 ->
         build_reportable_dates(start_after, today, batch_size)
+
       _ ->
         []
     end
@@ -26,7 +27,7 @@ defmodule Lightning.UsageTracking.ReportDateService do
 
   defp candidate_dates(start_after, today) do
     start_date = start_after |> Date.add(1)
-    end_date = today |> Date.add(-1) 
+    end_date = today |> Date.add(-1)
 
     Date.range(start_date, end_date)
   end
@@ -40,10 +41,11 @@ defmodule Lightning.UsageTracking.ReportDateService do
   defp report_dates(candidate_dates) do
     [start_date, end_date] = find_boundaries(candidate_dates)
 
-    query = from r in Report,
-      where: r.report_date >= ^start_date and r.report_date < ^end_date,
-      select: r.report_date,
-      order_by: [asc: r.report_date]
+    query =
+      from r in Report,
+        where: r.report_date >= ^start_date and r.report_date < ^end_date,
+        select: r.report_date,
+        order_by: [asc: r.report_date]
 
     Repo.all(query) |> MapSet.new()
   end

@@ -19,6 +19,7 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
         enabled_at
         |> DateTime.add(1, :day)
         |> DateTime.to_date()
+
       last_report_date =
         reference_time
         |> DateTime.add(-1, :day)
@@ -55,12 +56,12 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
 
       ConfigurationManagementService.enable(enabled_at)
 
-      Oban.Testing.with_testing_mode(:manual, fn->
+      Oban.Testing.with_testing_mode(:manual, fn ->
         ReportQueueingService.enqueue_reports(true, reference_time, @batch_size)
       end)
 
       for date <- reportable_dates do
-        assert_enqueued worker: ReportWorker, args: %{date: date}
+        assert_enqueued(worker: ReportWorker, args: %{date: date})
       end
     end
 
@@ -77,7 +78,7 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
 
       ConfigurationManagementService.enable(enabled_at)
 
-      Oban.Testing.with_testing_mode(:manual, fn->
+      Oban.Testing.with_testing_mode(:manual, fn ->
         ReportQueueingService.enqueue_reports(true, reference_time, batch_size)
 
         for date <- included_dates do
@@ -106,7 +107,7 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
 
       ConfigurationManagementService.enable(enabled_at)
 
-      Oban.Testing.with_testing_mode(:manual, fn->
+      Oban.Testing.with_testing_mode(:manual, fn ->
         ReportQueueingService.enqueue_reports(true, reference_time, @batch_size)
       end)
 
@@ -123,7 +124,7 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
       %{start_reporting_after: existing_date} =
         ConfigurationManagementService.enable(enabled_at)
 
-      Oban.Testing.with_testing_mode(:manual, fn->
+      Oban.Testing.with_testing_mode(:manual, fn ->
         ReportQueueingService.enqueue_reports(true, reference_time, @batch_size)
       end)
 

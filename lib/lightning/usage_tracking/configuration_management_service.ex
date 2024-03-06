@@ -44,8 +44,10 @@ defmodule Lightning.UsageTracking.ConfigurationManagementService do
     case Repo.one(DailyReportConfiguration) do
       %{tracking_enabled_at: nil} ->
         :error
+
       nil ->
         :error
+
       config ->
         config
         |> Changeset.change(start_reporting_after: date)

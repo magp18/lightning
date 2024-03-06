@@ -9,6 +9,7 @@ defmodule Lightning.UsageTracking.ReportDateServiceTest do
     test "returns a range of reportable dates between the two boundary dates" do
       start_after = ~D[2024-02-12]
       today = ~D[2024-02-20]
+
       expected_dates = [
         ~D[2024-02-13],
         ~D[2024-02-14],
@@ -16,7 +17,7 @@ defmodule Lightning.UsageTracking.ReportDateServiceTest do
         ~D[2024-02-16],
         ~D[2024-02-17],
         ~D[2024-02-18],
-        ~D[2024-02-19],
+        ~D[2024-02-19]
       ]
 
       dates = ReportDateService.reportable_dates(start_after, today, @batch_size)
@@ -57,10 +58,13 @@ defmodule Lightning.UsageTracking.ReportDateServiceTest do
 
       _before_start =
         insert(:usage_tracking_report, report_date: ~D[2024-02-11])
+
       _exclude_date_1 =
         insert(:usage_tracking_report, report_date: ~D[2024-02-17])
+
       _exclude_date_2 =
         insert(:usage_tracking_report, report_date: ~D[2024-02-14])
+
       _nil_date =
         insert(:usage_tracking_report, report_date: nil)
 
@@ -69,7 +73,7 @@ defmodule Lightning.UsageTracking.ReportDateServiceTest do
         ~D[2024-02-15],
         ~D[2024-02-16],
         ~D[2024-02-18],
-        ~D[2024-02-19],
+        ~D[2024-02-19]
       ]
 
       dates = ReportDateService.reportable_dates(start_after, today, @batch_size)
@@ -87,13 +91,14 @@ defmodule Lightning.UsageTracking.ReportDateServiceTest do
       # remove the first two dates from consideration for batching.
       _batch_padding_1 =
         insert(:usage_tracking_report, report_date: ~D[2024-02-13])
+
       _batch_padding_2 =
         insert(:usage_tracking_report, report_date: ~D[2024-02-14])
 
       expected_dates = [
         ~D[2024-02-15],
         ~D[2024-02-16],
-        ~D[2024-02-17],
+        ~D[2024-02-17]
       ]
 
       dates = ReportDateService.reportable_dates(start_after, today, batch_size)

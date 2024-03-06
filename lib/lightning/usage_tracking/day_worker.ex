@@ -11,7 +11,6 @@ defmodule Lightning.UsageTracking.DayWorker do
 
   @impl Oban.Worker
   def perform(%{args: %{"batch_size" => batch_size}}) do
-
     ReportQueueingService.enqueue_reports(
       Application.get_env(:lightning, :usage_tracking)[:enabled],
       DateTime.utc_now(),

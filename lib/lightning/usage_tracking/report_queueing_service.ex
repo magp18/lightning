@@ -11,6 +11,7 @@ defmodule Lightning.UsageTracking.ReportQueueingService do
   def enqueue_reports(_enabled = true, reference_time, batch_size) do
     %{start_reporting_after: start_after} =
       ConfigurationManagementService.enable(reference_time)
+
     today = DateTime.to_date(reference_time)
 
     start_after

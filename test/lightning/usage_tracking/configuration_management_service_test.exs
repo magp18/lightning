@@ -233,7 +233,7 @@ defmodule Lightning.UsageTracking.ConfigurationManagementServiceTest do
 
   describe "start_reporting_after/1 - enabled configuration exists" do
     setup do
-      %DailyReportConfiguration {
+      %DailyReportConfiguration{
         tracking_enabled_at: DateTime.utc_now(),
         start_reporting_after: ~D[2024-03-01]
       }
@@ -243,7 +243,7 @@ defmodule Lightning.UsageTracking.ConfigurationManagementServiceTest do
     end
 
     test "updates the start_reporting_after date", %{date: date} do
-      ConfigurationManagementService.start_reporting_after(date) 
+      ConfigurationManagementService.start_reporting_after(date)
 
       assert(
         %{start_reporting_after: ^date} = Repo.one!(DailyReportConfiguration)
@@ -277,7 +277,7 @@ defmodule Lightning.UsageTracking.ConfigurationManagementServiceTest do
     setup do
       existing_date = ~D[2024-03-01]
 
-      %DailyReportConfiguration {
+      %DailyReportConfiguration{
         tracking_enabled_at: nil,
         start_reporting_after: existing_date
       }
