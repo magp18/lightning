@@ -230,4 +230,79 @@ defmodule Lightning.UsageTracking.ConfigurationManagementServiceTest do
       assert ConfigurationManagementService.disable() == nil
     end
   end
+
+  describe "start_reporting_after/1 - enabled configuration exists" do
+    setup do
+      %DailyReportConfiguration {
+        tracking_enabled_at: DateTime.utc_now(),
+        start_reporting_after: ~D[2024-03-01]
+      }
+      |> Repo.insert!()
+
+      %{date: ~D[2024-03-05]}
+    end
+
+    test "updates the start_reporting_after date", %{date: date} do
+      ConfigurationManagementService.start_reporting_after(date) 
+
+      assert(
+        %{start_reporting_after: ^date} = Repo.one!(DailyReportConfiguration)
+      )
+    end
+
+    test "returns :ok", %{date: date} do
+      assert ConfigurationManagementService.start_reporting_after(date) == :ok
+    end
+  end
+
+  describe "start_reporting_after/1 - no configuration exists" do
+    setup do
+      %{date: ~D[2024-03-05]}
+    end
+
+    test "does nothing", %{date: date} do
+      ConfigurationManagementService.start_reporting_after(date)
+
+      assert Repo.one(DailyReportConfiguration) == nil
+    end
+
+    test "returns :error", %{date: date} do
+      assert(
+        ConfigurationManagementService.start_reporting_after(date) == :error
+      )
+    end
+  end
+
+  describe "start_reporting_after/1 - disabled configuration exists" do
+    setup do
+      existing_date = ~D[2024-03-01]
+
+      %DailyReportConfiguration {
+        tracking_enabled_at: nil,
+        start_reporting_after: existing_date
+      }
+      |> Repo.insert!()
+
+      %{date: ~D[2024-03-05], existing_date: existing_date}
+    end
+
+    test "does not update the record", config do
+      %{date: date, existing_date: existing_date} = config
+
+      ConfigurationManagementService.start_reporting_after(date)
+
+      assert(
+        %{
+          tracking_enabled_at: nil,
+          start_reporting_after: ^existing_date
+        } = Repo.one!(DailyReportConfiguration)
+      )
+    end
+
+    test "returns :error", %{date: date} do
+      assert(
+        ConfigurationManagementService.start_reporting_after(date) == :error
+      )
+    end
+  end
 end

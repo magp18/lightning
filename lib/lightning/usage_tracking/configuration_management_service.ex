@@ -39,4 +39,19 @@ defmodule Lightning.UsageTracking.ConfigurationManagementService do
       |> Repo.update!()
     end
   end
+
+  def start_reporting_after(date) do
+    case Repo.one(DailyReportConfiguration) do
+      %{tracking_enabled_at: nil} ->
+        :error
+      nil ->
+        :error
+      config ->
+        config
+        |> Changeset.change(start_reporting_after: date)
+        |> Repo.update!()
+
+        :ok
+    end
+  end
 end
