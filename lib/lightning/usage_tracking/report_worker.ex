@@ -7,7 +7,12 @@ defmodule Lightning.UsageTracking.ReportWorker do
     queue: :background,
     max_attempts: 1
 
+
+  require Logger
   @impl Oban.Worker
-  def perform(_opts) do
+  def perform(%{args: %{"date" => date}}) do
+    Logger.info("ReportWorker was asked to report on #{date}")
+
+    :ok
   end
 end
