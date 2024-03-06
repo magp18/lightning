@@ -13,7 +13,7 @@ defmodule Lightning.UsageTracking.ReportDateService do
       diff when diff > 2 ->
         build_reportable_dates(start_after, today, batch_size)
 
-      _ ->
+      _too_small_a_diff ->
         []
     end
   end

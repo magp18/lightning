@@ -8,7 +8,7 @@ defmodule Lightning.UsageTracking.ReportQueueingService do
   alias Lightning.UsageTracking.ReportDateService
   alias Lightning.UsageTracking.ReportWorker
 
-  def enqueue_reports(_enabled = true, reference_time, batch_size) do
+  def enqueue_reports(true = _enabled, reference_time, batch_size) do
     %{start_reporting_after: start_after} =
       ConfigurationManagementService.enable(reference_time)
 
@@ -22,13 +22,13 @@ defmodule Lightning.UsageTracking.ReportQueueingService do
     :ok
   end
 
-  def enqueue_reports(_enabled = false, _reference_time, _batch_size) do
+  def enqueue_reports(false = _enabled, _reference_time, _batch_size) do
     ConfigurationManagementService.disable()
 
     :ok
   end
 
-  defp update_configuration(dates = [earliest_report_date | _other]) do
+  defp update_configuration([earliest_report_date | _other] = dates) do
     start_reporting_after = Date.add(earliest_report_date, -1)
 
     ConfigurationManagementService.start_reporting_after(start_reporting_after)
@@ -36,7 +36,7 @@ defmodule Lightning.UsageTracking.ReportQueueingService do
     dates
   end
 
-  defp update_configuration(dates = []), do: dates
+  defp update_configuration([] = dates), do: dates
 
   defp enqueue(date) do
     Oban.insert(Lightning.Oban, ReportWorker.new(%{date: date}))
