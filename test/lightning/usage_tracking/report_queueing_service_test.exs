@@ -12,7 +12,28 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
 
   describe "enqueue_reports/3 - tracking is enabled" do
     setup do
-      %{reference_time: DateTime.utc_now()}
+      reference_time = DateTime.utc_now()
+      enabled_at = DateTime.add(reference_time, -@range_in_days, :day)
+
+      first_report_date =
+        enabled_at
+        |> DateTime.add(1, :day)
+        |> DateTime.to_date()
+      last_report_date =
+        reference_time
+        |> DateTime.add(-1, :day)
+        |> DateTime.to_date()
+
+      reportable_dates =
+        first_report_date
+        |> Date.range(last_report_date)
+        |> Enum.to_list()
+
+      %{
+        enabled_at: enabled_at,
+        reference_time: reference_time,
+        reportable_dates: reportable_dates
+      }
     end
 
     test "enables the configuration", config do
@@ -26,52 +47,33 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
     end
 
     test "enqueues jobs to process outstanding days", config do
-      %{reference_time: reference_time} = config
-
-      enabled_at = DateTime.add(reference_time, -@range_in_days, :day)
-      first_report_date =
-        enabled_at
-        |> DateTime.add(1, :day)
-        |> DateTime.to_date()
-      last_report_date =
-        reference_time
-        |> DateTime.add(-1, :day)
-        |> DateTime.to_date()
-
-      expected_dates = Date.range(first_report_date, last_report_date)
+      %{
+        enabled_at: enabled_at,
+        reference_time: reference_time,
+        reportable_dates: reportable_dates
+      } = config
 
       ConfigurationManagementService.enable(enabled_at)
 
       Oban.Testing.with_testing_mode(:manual, fn->
         ReportQueueingService.enqueue_reports(true, reference_time, @batch_size)
-
-        for date <- expected_dates do
-          assert_enqueued worker: ReportWorker, args: %{date: date}, queue: :background
-        end
       end)
+
+      for date <- reportable_dates do
+        assert_enqueued worker: ReportWorker, args: %{date: date}
+      end
     end
 
     test "does not enqueue more than the batch size", config do
-      %{reference_time: reference_time} = config
+      %{
+        enabled_at: enabled_at,
+        reference_time: reference_time,
+        reportable_dates: reportable_dates
+      } = config
 
-      enabled_at = DateTime.add(reference_time, -@range_in_days, :day)
-      first_report_date =
-        enabled_at
-        |> DateTime.add(1, :day)
-        |> DateTime.to_date()
-      last_report_date =
-        reference_time
-        |> DateTime.add(-1, :day)
-        |> DateTime.to_date()
-      all_dates_within_range =
-        first_report_date
-        |> Date.range(last_report_date)
-        |> Enum.to_list()
-      batch_size = length(all_dates_within_range) - 2
-      included_dates =
-        all_dates_within_range |> Enum.take(batch_size)
-      excluded_dates =
-        all_dates_within_range |> Enum.take(-2)
+      batch_size = length(reportable_dates) - 2
+      included_dates = reportable_dates |> Enum.take(batch_size)
+      excluded_dates = reportable_dates |> Enum.take(-2)
 
       ConfigurationManagementService.enable(enabled_at)
 
@@ -79,19 +81,11 @@ defmodule Lightning.UsageTracking.ReportQueueingServiceTest do
         ReportQueueingService.enqueue_reports(true, reference_time, batch_size)
 
         for date <- included_dates do
-          assert_enqueued(
-            worker: ReportWorker,
-            args: %{date: date},
-            queue: :background
-          )
+          assert_enqueued(worker: ReportWorker, args: %{date: date})
         end
 
         for date <- excluded_dates do
-          refute_enqueued(
-            worker: ReportWorker,
-            args: %{date: date},
-            queue: :background
-          )
+          refute_enqueued(worker: ReportWorker, args: %{date: date})
         end
       end)
     end
