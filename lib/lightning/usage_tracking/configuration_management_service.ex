@@ -13,19 +13,10 @@ defmodule Lightning.UsageTracking.ConfigurationManagementService do
 
     case Repo.one(DailyReportConfiguration) do
       config = %{tracking_enabled_at: nil, start_reporting_after: nil} ->
-        config
-        |> Changeset.change(
-          tracking_enabled_at: enabled_at,
-          start_reporting_after: start_reporting_after
-        )
-        |> Repo.update!()
+        enable_config(config, enabled_at, start_reporting_after)
 
       nil ->
-        %DailyReportConfiguration{
-          tracking_enabled_at: enabled_at,
-          start_reporting_after: start_reporting_after
-        }
-        |> Repo.insert!()
+        create_enabled_config(enabled_at, start_reporting_after)
 
       config ->
         config
@@ -38,6 +29,23 @@ defmodule Lightning.UsageTracking.ConfigurationManagementService do
       |> Changeset.change(tracking_enabled_at: nil, start_reporting_after: nil)
       |> Repo.update!()
     end
+  end
+
+  def create_enabled_config(enabled_at, start_reporting_after) do
+    %DailyReportConfiguration{
+      tracking_enabled_at: enabled_at,
+      start_reporting_after: start_reporting_after
+    }
+    |> Repo.insert!()
+  end
+
+  def enable_config(config, enabled_at, start_reporting_after) do
+    config
+    |> Changeset.change(
+      tracking_enabled_at: enabled_at,
+      start_reporting_after: start_reporting_after
+    )
+    |> Repo.update!()
   end
 
   def start_reporting_after(date) do
