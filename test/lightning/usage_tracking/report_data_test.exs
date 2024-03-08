@@ -176,6 +176,221 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     end
   end
 
+  describe ".generate/3 - cleartext uuids disabled" do
+    setup [:setup_config, :setup_cleartext_uuids_disabled, :setup_date]
+
+    test "sets the time that the report was generated at", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      %{generated_at: generated_at} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert DateTime.diff(DateTime.utc_now(), generated_at, :second) < 1
+    end
+
+    test "contains hashed uuid of reporting instance", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      %{instance_id: instance_id} = report_config
+
+      %{instance: %{hashed_uuid: hashed_uuid}} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert hashed_uuid == build_hash(instance_id)
+    end
+
+    test "cleartext uuid of reporting instance is nil", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      assert(
+        %{
+          instance: %{cleartext_uuid: nil}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
+    test "indicates the version of lightning present on the instance", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      # Temporarily water-down the test to address constraints imposed by CI.
+      %{instance: %{version: version}} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert String.match?(version, ~r/\A\d+\.\d+\.\d+\z/)
+    end
+
+    test "includes the total number of non-disabled users", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+      _eligible_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _eligible_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _eligible_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _ineligible_user = insert(
+        :user,
+        disabled: true,
+        inserted_at: ~U[2024-02-04 01:00:00Z],
+        updated_at: ~U[2024-02-04 01:00:00Z]
+      )
+
+      assert(
+        %{
+          instance: %{no_of_users: 3}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
+    test "includes the operating system details",
+         %{config: config, cleartext_enabled: enabled} do
+      {_os_family, os_name_atom} = :os.type()
+
+      os_name = os_name_atom |> Atom.to_string()
+
+      assert String.match?(os_name, ~r/.{5,}/)
+
+      assert(
+        %{instance: %{operating_system: ^os_name}} =
+          ReportData.generate(config, enabled)
+      )
+    end
+
+    test "includes project details",
+         %{config: config, cleartext_enabled: enabled} do
+      project_1 = build_project(2)
+      project_2 = build_project(3)
+
+      %{projects: projects} = ReportData.generate(config, enabled)
+
+      assert projects |> count() == 2
+
+      projects |> assert_instrumented(project_1, enabled)
+      projects |> assert_instrumented(project_2, enabled)
+    end
+
+    test "indicates the version of the report data structure in use",
+         %{config: config, cleartext_enabled: enabled} do
+      assert %{version: "1"} = ReportData.generate(config, enabled)
+    end
+  end
+
+  describe ".generate/3 - cleartext uuids enabled" do
+    setup [:setup_config, :setup_cleartext_uuids_enabled, :setup_date]
+
+    test "sets the time that the report was generated at", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      %{generated_at: generated_at} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert DateTime.diff(DateTime.utc_now(), generated_at, :second) < 1
+    end
+
+    test "contains hashed uuid of reporting instance", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      %{instance_id: instance_id} = report_config
+
+      %{instance: %{hashed_uuid: hashed_uuid}} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert hashed_uuid == build_hash(instance_id)
+    end
+
+    test "cleartext uuid of reporting instance is populated", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+      %{instance_id: instance_id} = report_config
+
+      assert(
+        %{
+          instance: %{cleartext_uuid: ^instance_id}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
+    test "indicates the version of lightning present on the instance", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      # Temporarily water-down the test to address constraints imposed by CI.
+      %{instance: %{version: version}} =
+        ReportData.generate(report_config, enabled, date)
+
+      assert String.match?(version, ~r/\A\d+\.\d+\.\d+\z/)
+    end
+
+    test "includes the total number of non-disabled users", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+      _eligible_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _eligible_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _eligible_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _ineligible_user = insert(
+        :user,
+        disabled: true,
+        inserted_at: ~U[2024-02-04 01:00:00Z],
+        updated_at: ~U[2024-02-04 01:00:00Z]
+      )
+
+      assert(
+        %{
+          instance: %{no_of_users: 3}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
+    test "includes the operating system details",
+         %{config: config, cleartext_enabled: enabled} do
+      {_os_family, os_name_atom} = :os.type()
+
+      os_name = os_name_atom |> Atom.to_string()
+
+      assert String.match?(os_name, ~r/.{5,}/)
+
+      assert(
+        %{instance: %{operating_system: ^os_name}} =
+          ReportData.generate(config, enabled)
+      )
+    end
+
+    test "includes project details",
+         %{config: config, cleartext_enabled: enabled} do
+      project_1 = build_project(2)
+      project_2 = build_project(3)
+
+      %{projects: projects} = ReportData.generate(config, enabled)
+
+      assert projects |> count() == 2
+
+      projects |> assert_instrumented(project_1, enabled)
+      projects |> assert_instrumented(project_2, enabled)
+    end
+
+    test "indicates the version of the report data structure in use",
+         %{config: config, cleartext_enabled: enabled} do
+      assert %{version: "1"} = ReportData.generate(config, enabled)
+    end
+  end
+
   defp setup_config(context) do
     Map.merge(context, %{config: Repo.insert!(%Configuration{})})
   end
@@ -187,6 +402,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   defp setup_cleartext_uuids_enabled(context) do
     Map.merge(context, %{cleartext_enabled: true})
   end
+
+  defp setup_date(context), do: Map.merge(context, %{date: ~D[2024-02-25]})
 
   defp build_hash(uuid), do: Base.encode16(:crypto.hash(:sha256, uuid))
 

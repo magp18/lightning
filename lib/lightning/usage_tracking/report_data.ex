@@ -10,6 +10,7 @@ defmodule Lightning.UsageTracking.ReportData do
   alias Lightning.Projects.Project
   alias Lightning.Repo
   alias Lightning.UsageTracking.Configuration
+  alias Lightning.UsageTracking.UserService
   alias Lightning.Workflows.Workflow
 
   @lightning_version Lightning.MixProject.project()[:version]
@@ -23,8 +24,13 @@ defmodule Lightning.UsageTracking.ReportData do
     }
   end
 
-  def generate(_configuration, _cleartext_enabled, _date) do
-    %{fix: "me"}
+  def generate(configuration, cleartext_enabled, date) do
+    %{
+      generated_at: DateTime.utc_now(),
+      instance: instrument_instance(configuration, cleartext_enabled, date),
+      # projects: instrument_projects(cleartext_enabled),
+      # version: "1"
+    }
   end
 
   defp instrument_instance(configuration, cleartext_enabled) do
@@ -34,6 +40,18 @@ defmodule Lightning.UsageTracking.ReportData do
     |> instrument_identity(cleartext_enabled)
     |> Map.merge(%{
       no_of_users: no_of_users(),
+      operating_system: operating_system_name(),
+      version: @lightning_version
+    })
+  end
+
+  defp instrument_instance(configuration, cleartext_enabled, date) do
+    %Configuration{instance_id: instance_id} = configuration
+
+    instance_id
+    |> instrument_identity(cleartext_enabled)
+    |> Map.merge(%{
+      no_of_users: UserService.no_of_users(date),
       operating_system: operating_system_name(),
       version: @lightning_version
     })
