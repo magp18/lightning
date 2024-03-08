@@ -23,6 +23,10 @@ defmodule Lightning.UsageTracking.ReportData do
     }
   end
 
+  def generate(_configuration, _cleartext_enabled, _date) do
+    %{fix: "me"}
+  end
+
   defp instrument_instance(configuration, cleartext_enabled) do
     %Configuration{instance_id: instance_id} = configuration
 

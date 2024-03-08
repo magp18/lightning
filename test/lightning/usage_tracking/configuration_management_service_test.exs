@@ -305,4 +305,25 @@ defmodule Lightning.UsageTracking.ConfigurationManagementServiceTest do
       )
     end
   end
+
+  describe "find/0" do
+    test "returns existing config if it is enabled" do
+      expected_config = ConfigurationManagementService.enable(DateTime.utc_now())
+
+      returned_config = ConfigurationManagementService.find()
+
+      assert returned_config == expected_config
+    end
+
+    test "returns nil if the config exists but is disabled" do
+      ConfigurationManagementService.enable(DateTime.utc_now())
+      ConfigurationManagementService.disable()
+
+      assert ConfigurationManagementService.find() == nil
+    end
+
+    test "returns nil if the config does not exist" do
+      assert ConfigurationManagementService.find() == nil
+    end
+  end
 end
