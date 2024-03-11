@@ -4,6 +4,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   alias Lightning.Projects.Project
   alias Lightning.Workflows.Workflow
   alias Lightning.UsageTracking.Configuration
+  alias Lightning.UsageTracking.ConfigurationManagementService
   alias Lightning.UsageTracking.ReportData
 
   def setup do
@@ -177,7 +178,11 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   end
 
   describe ".generate/3 - cleartext uuids disabled" do
-    setup [:setup_config, :setup_cleartext_uuids_disabled, :setup_date]
+    setup [
+      :setup_daily_report_config,
+      :setup_cleartext_uuids_disabled,
+      :setup_date
+    ]
 
     test "sets the time that the report was generated at", config do
       %{config: report_config, cleartext_enabled: enabled, date: date} = config
@@ -250,6 +255,46 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
+    test "includes the total number of active users", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      within_threshold_date = Date.add(date, -29)
+      {:ok, within_threshold_time, _offset} =
+        DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
+      outside_threshold_date = Date.add(date, -30)
+      {:ok, outside_threshold_time, _offset} =
+        DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
+
+      enabled_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token = insert(
+        :user_token,
+        context: "session",
+        inserted_at: within_threshold_time,
+        user: enabled_user_1
+      )
+      enabled_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _inactive_token = insert(
+        :user_token,
+        context: "session",
+        inserted_at: outside_threshold_time,
+        user: enabled_user_2
+      )
+
+      assert(
+        %{
+          instance: %{no_of_active_users: 1}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
     test "includes the operating system details",
          %{config: config, cleartext_enabled: enabled} do
       {_os_family, os_name_atom} = :os.type()
@@ -284,7 +329,11 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   end
 
   describe ".generate/3 - cleartext uuids enabled" do
-    setup [:setup_config, :setup_cleartext_uuids_enabled, :setup_date]
+    setup [
+      :setup_daily_report_config,
+      :setup_cleartext_uuids_enabled,
+      :setup_date
+    ]
 
     test "sets the time that the report was generated at", config do
       %{config: report_config, cleartext_enabled: enabled, date: date} = config
@@ -358,6 +407,46 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
+    test "includes the total number of active users", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      within_threshold_date = Date.add(date, -29)
+      {:ok, within_threshold_time, _offset} =
+        DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
+      outside_threshold_date = Date.add(date, -30)
+      {:ok, outside_threshold_time, _offset} =
+        DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
+
+      enabled_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token = insert(
+        :user_token,
+        context: "session",
+        inserted_at: within_threshold_time,
+        user: enabled_user_1
+      )
+      enabled_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _inactive_token = insert(
+        :user_token,
+        context: "session",
+        inserted_at: outside_threshold_time,
+        user: enabled_user_2
+      )
+
+      assert(
+        %{
+          instance: %{no_of_active_users: 1}
+        } = ReportData.generate(report_config, enabled, date)
+      )
+    end
+
     test "includes the operating system details",
          %{config: config, cleartext_enabled: enabled} do
       {_os_family, os_name_atom} = :os.type()
@@ -393,6 +482,13 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
   defp setup_config(context) do
     Map.merge(context, %{config: Repo.insert!(%Configuration{})})
+  end
+
+  defp setup_daily_report_config(context) do
+    Map.merge(
+      context,
+      %{config: ConfigurationManagementService.enable(DateTime.utc_now())}
+    )
   end
 
   defp setup_cleartext_uuids_disabled(context) do

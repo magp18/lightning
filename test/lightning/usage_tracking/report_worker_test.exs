@@ -2,7 +2,6 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
   use Lightning.DataCase
 
   import Mock
-  import ExUnit.CaptureIO
   import Lightning.ApplicationHelpers, only: [put_temporary_env: 3]
 
   alias Lightning.UsageTracking.Client

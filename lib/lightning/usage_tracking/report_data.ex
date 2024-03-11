@@ -10,6 +10,7 @@ defmodule Lightning.UsageTracking.ReportData do
   alias Lightning.Projects.Project
   alias Lightning.Repo
   alias Lightning.UsageTracking.Configuration
+  alias Lightning.UsageTracking.DailyReportConfiguration
   alias Lightning.UsageTracking.UserService
   alias Lightning.Workflows.Workflow
 
@@ -28,8 +29,8 @@ defmodule Lightning.UsageTracking.ReportData do
     %{
       generated_at: DateTime.utc_now(),
       instance: instrument_instance(configuration, cleartext_enabled, date),
-      # projects: instrument_projects(cleartext_enabled),
-      # version: "1"
+      projects: instrument_projects(cleartext_enabled),
+      version: "1"
     }
   end
 
@@ -46,11 +47,12 @@ defmodule Lightning.UsageTracking.ReportData do
   end
 
   defp instrument_instance(configuration, cleartext_enabled, date) do
-    %Configuration{instance_id: instance_id} = configuration
+    %DailyReportConfiguration{instance_id: instance_id} = configuration
 
     instance_id
     |> instrument_identity(cleartext_enabled)
     |> Map.merge(%{
+      no_of_active_users: UserService.no_of_active_users(date),
       no_of_users: UserService.no_of_users(date),
       operating_system: operating_system_name(),
       version: @lightning_version

@@ -141,6 +141,12 @@ defmodule Lightning.Factories do
     }
   end
 
+  def user_token_factory do
+    %Lightning.Accounts.UserToken{
+      token: fn -> Ecto.UUID.generate() end
+    }
+  end
+
   def backup_code_factory do
     %Lightning.Accounts.UserBackupCode{
       code: Lightning.Accounts.UserBackupCode.generate_backup_code()

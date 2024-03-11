@@ -1,20 +1,12 @@
 defmodule Lightning.UsageTracking.UserService do
-  import Ecto.Query
-
   alias Lightning.Repo
-  alias Lightning.Accounts.User
+  alias Lightning.UsageTracking.UserQueries
 
   def no_of_users(date) do
-    {:ok, datetime, _offset} = "#{date}T23:59:59Z" |> DateTime.from_iso8601()
+    UserQueries.enabled_users(date) |> Repo.aggregate(:count)
+  end
 
-    query =
-      from u in User,
-        where: u.disabled == false and u.inserted_at <= ^datetime,
-        or_where:
-          u.disabled == true and
-            u.inserted_at <= ^datetime and
-            u.updated_at > ^datetime
-
-    Repo.aggregate(query, :count)
+  def no_of_active_users(date) do
+    UserQueries.active_users(date) |> Repo.aggregate(:count)
   end
 end
