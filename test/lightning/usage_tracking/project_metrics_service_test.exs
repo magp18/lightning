@@ -73,6 +73,27 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
         } = ProjectMetricsService.generate_metrics(project, enabled, @date)
       )
     end
+
+    test "includes data for associated workflows", config do
+      %{project: project, enabled: enabled} = config
+
+      [workflow_1, workflow_2] = project.workflows
+
+      %{workflows: workflows} = ProjectMetricsService.generate_metrics(project, enabled, @date)
+
+      workflows
+      |> assert_workflow_metrics(
+        workflow: workflow_1,
+        cleartext_enabled: enabled,
+        date: @date
+      )
+      workflows
+      |> assert_workflow_metrics(
+        workflow: workflow_2,
+        cleartext_enabled: enabled,
+        date: @date
+      )
+    end
   end
 
   describe ".generate_metrics/3 - cleartext enabled" do
@@ -133,12 +154,33 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
         } = ProjectMetricsService.generate_metrics(project, enabled, @date)
       )
     end
+
+    test "includes data for associated workflows", config do
+      %{project: project, enabled: enabled} = config
+
+      [workflow_1, workflow_2] = project.workflows
+
+      %{workflows: workflows} = ProjectMetricsService.generate_metrics(project, enabled, @date)
+
+      workflows
+      |> assert_workflow_metrics(
+        workflow: workflow_1,
+        cleartext_enabled: enabled,
+        date: @date
+      )
+      workflows
+      |> assert_workflow_metrics(
+        workflow: workflow_2,
+        cleartext_enabled: enabled,
+        date: @date
+      )
+    end
   end
 
   defp build_project(count, project_id) do
     project = insert(:project, id: project_id, project_users: build_project_users(count))
 
-    # workflows = insert_list(count, :workflow, project: project)
+    insert_list(count, :workflow, project: project)
     #
     # for workflow <- workflows do
     #   [job | _] = insert_list(count, :job, workflow: workflow)
@@ -154,7 +196,7 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
     #   end
     # end
 
-    project |> Repo.preload(:users)
+    project |> Repo.preload([:users, :workflows])
   end
 
   defp build_project_users(count) do
@@ -200,4 +242,29 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
 
     insert(:user, disabled: false, inserted_at: activated_after_report)
   end
+
+  defp assert_workflow_metrics(workflows_metrics, opts) do
+    workflow = opts |> Keyword.get(:workflow)
+    _cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
+    _date = opts |> Keyword.get(:date)
+
+    # %Project{id: id, users: users, workflows: workflows} =
+    #   project |> Repo.preload([:users, :workflows])
+
+    workflow_metrics = workflows_metrics |> find_instrumentation(workflow.id)
+    # expected_metrics =
+    #   WorkflowMetricsService.generate_metrics(workflow, cleartext_enabled, date)
+    expected_metrics = %{fix: "me"}
+
+    assert workflow_metrics == expected_metrics
+  end
+
+  defp find_instrumentation(instrumented_collection, identity) do
+    hashed_uuid = build_hash(identity)
+
+    instrumented_collection
+    |> Enum.find(fn record -> record.hashed_uuid == hashed_uuid end)
+  end
+
+  defp build_hash(uuid), do: Base.encode16(:crypto.hash(:sha256, uuid))
 end
