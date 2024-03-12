@@ -6,6 +6,7 @@ defmodule Lightning.UsageTracking.ProjectMetricsService do
     %Project{id: id, users: users} = project
 
     %{
+      no_of_active_users: UserService.no_of_active_users(date, users),
       no_of_users: UserService.no_of_users(date, users)
     }
     |> Map.merge(instrument_identity(id, cleartext_enabled))

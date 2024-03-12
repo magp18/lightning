@@ -130,10 +130,10 @@ defmodule Lightning.UsageTracking.UserQueriesTest do
         eligible_user_3
       ]
 
-      result = UserQueries.enabled_users(@date) |> Repo.all()
+      result = UserQueries.enabled_users(@date, user_list) |> Repo.all()
 
-      refute result |> contains(eligible_user_1)
-      refute result |> contains(eligible_user_3)
+      assert result |> contains(eligible_user_1)
+      assert result |> contains(eligible_user_3)
       refute result |> contains(eligible_user_2)
       refute result |> contains(ineligible_user_after_date)
     end
@@ -149,7 +149,7 @@ defmodule Lightning.UsageTracking.UserQueriesTest do
       _active_token = insert(
         :user_token,
         context: "session",
-        inserted_at: ~U[2024-01-07 00:00:01Z],
+        inserted_at: ~U[2024-01-07 00:00:00Z],
         user: enabled_user_1
       )
       enabled_user_2 = insert(
@@ -255,6 +255,68 @@ defmodule Lightning.UsageTracking.UserQueriesTest do
         result |> contains(enabled_user_2)
       )
       assert(length(result) == 2)
+    end
+  end
+
+  describe "active_users/2" do
+    test "returns subset of user list that have logged in the last 30 days" do
+      enabled_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_1 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: ~U[2024-01-07 00:00:00Z],
+        user: enabled_user_1
+      )
+      enabled_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_2 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: ~U[2024-02-05 23:59:59Z],
+        user: enabled_user_2
+      )
+      enabled_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_3 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: ~U[2024-01-07 00:00:00Z],
+        user: enabled_user_3
+      )
+      enabled_user_4 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _ineligible_token_older_than_30_days = insert(
+        :user_token,
+        context: "session",
+        inserted_at: ~U[2024-01-06 23:59:59Z],
+        user: enabled_user_4
+      )
+
+      user_list = [
+        enabled_user_1,
+        enabled_user_4,
+        enabled_user_3
+      ]
+
+      result = UserQueries.active_users(@date, user_list) |> Repo.all()
+
+      assert(result |> contains(enabled_user_1))
+      assert(result |> contains(enabled_user_3))
+      refute(result |> contains(enabled_user_2))
+      refute(result |> contains(enabled_user_4))
     end
   end
 

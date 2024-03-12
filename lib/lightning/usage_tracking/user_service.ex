@@ -13,4 +13,8 @@ defmodule Lightning.UsageTracking.UserService do
   def no_of_active_users(date) do
     UserQueries.active_users(date) |> Repo.aggregate(:count)
   end
+
+  def no_of_active_users(date, user_list) do
+    UserQueries.active_users(date, user_list) |> Repo.aggregate(:count)
+  end
 end

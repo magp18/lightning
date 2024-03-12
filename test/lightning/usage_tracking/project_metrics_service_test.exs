@@ -59,6 +59,20 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
         } = ProjectMetricsService.generate_metrics(project, enabled, @date)
       )
     end
+
+    test "includes the number of active users", config do
+      %{
+        project: project,
+        enabled: enabled,
+        active_user_count: active_user_count
+      } = config
+
+      assert(
+        %{
+          no_of_active_users: ^active_user_count
+        } = ProjectMetricsService.generate_metrics(project, enabled, @date)
+      )
+    end
   end
 
   describe ".generate_metrics/3 - cleartext enabled" do
@@ -105,12 +119,24 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
         } = ProjectMetricsService.generate_metrics(project, enabled, @date)
       )
     end
+
+    test "includes the number of active users", config do
+      %{
+        project: project,
+        enabled: enabled,
+        active_user_count: active_user_count
+      } = config
+
+      assert(
+        %{
+          no_of_active_users: ^active_user_count
+        } = ProjectMetricsService.generate_metrics(project, enabled, @date)
+      )
+    end
   end
 
   defp build_project(count, project_id) do
     project = insert(:project, id: project_id, project_users: build_project_users(count))
-
-    # insert_project_users(count, project)
 
     # workflows = insert_list(count, :workflow, project: project)
     #
@@ -128,7 +154,7 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
     #   end
     # end
 
-    project
+    project |> Repo.preload(:users)
   end
 
   defp build_project_users(count) do

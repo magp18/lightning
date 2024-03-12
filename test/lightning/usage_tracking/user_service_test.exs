@@ -136,7 +136,7 @@ defmodule Lightning.UsageTracking.UserServiceTest do
         disabled: false,
         inserted_at: ~U[2024-02-04 01:00:00Z]
       )
-      _active_token = insert(
+      _active_token_user_1 = insert(
         :user_token,
         context: "session",
         inserted_at: within_threshold_time,
@@ -147,7 +147,7 @@ defmodule Lightning.UsageTracking.UserServiceTest do
         disabled: false,
         inserted_at: ~U[2024-02-04 01:00:00Z]
       )
-      _active_token = insert(
+      _active_token_user_2 = insert(
         :user_token,
         context: "session",
         inserted_at: within_threshold_time,
@@ -164,8 +164,72 @@ defmodule Lightning.UsageTracking.UserServiceTest do
         inserted_at: outside_threshold_time,
         user: enabled_user_3
       )
-      
+
       assert UserService.no_of_active_users(@date) == 2
+    end
+  end
+
+  describe ".no_of_active_users/2" do
+    test "returns active subset of user list" do
+      within_threshold_date = Date.add(@date, -29)
+      {:ok, within_threshold_time, _offset} =
+        DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
+      outside_threshold_date = Date.add(@date, -30)
+      {:ok, outside_threshold_time, _offset} =
+        DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
+
+      enabled_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_1 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: within_threshold_time,
+        user: enabled_user_1
+      )
+      enabled_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_2 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: within_threshold_time,
+        user: enabled_user_2
+      )
+      enabled_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _active_token_user_3 = insert(
+        :user_token,
+        context: "session",
+        inserted_at: within_threshold_time,
+        user: enabled_user_3
+      )
+      enabled_user_4 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      _inactive_token = insert(
+        :user_token,
+        context: "session",
+        inserted_at: outside_threshold_time,
+        user: enabled_user_4
+      )
+
+      user_list = [
+        enabled_user_1,
+        enabled_user_4,
+        enabled_user_3
+      ]
+      
+      assert UserService.no_of_active_users(@date, user_list) == 2
     end
   end
 end
