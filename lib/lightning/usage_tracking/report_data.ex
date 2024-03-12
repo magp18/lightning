@@ -11,6 +11,7 @@ defmodule Lightning.UsageTracking.ReportData do
   alias Lightning.Repo
   alias Lightning.UsageTracking.Configuration
   alias Lightning.UsageTracking.DailyReportConfiguration
+  alias Lightning.UsageTracking.ProjectMetricsService
   alias Lightning.UsageTracking.UserService
   alias Lightning.Workflows.Workflow
 
@@ -29,8 +30,8 @@ defmodule Lightning.UsageTracking.ReportData do
     %{
       generated_at: DateTime.utc_now(),
       instance: instrument_instance(configuration, cleartext_enabled, date),
-      projects: instrument_projects(cleartext_enabled),
-      version: "1"
+      projects: instrument_projects(cleartext_enabled, date),
+      version: "2"
     }
   end
 
@@ -90,6 +91,16 @@ defmodule Lightning.UsageTracking.ReportData do
         preload: [:users, [workflows: [:jobs, runs: [:steps]]]]
     )
     |> Enum.map(&instrument_project(&1, cleartext_enabled))
+  end
+
+  defp instrument_projects(cleartext_enabled, date) do
+    Repo.all(
+      from p in Project,
+        preload: [:users, [workflows: [:jobs, runs: [:steps]]]]
+    )
+    |> Enum.map(fn project ->
+      ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
+    end)
   end
 
   defp instrument_project(project, cleartext_enabled) do

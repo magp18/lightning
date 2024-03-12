@@ -32,7 +32,6 @@ defmodule Lightning.UsageTracking.UserQueriesTest do
 
       result = UserQueries.enabled_users(@date) |> Repo.all()
 
-      # assert length(result) == 2
       assert result |> contains(eligible_user_1)
       assert result |> contains(eligible_user_2)
       refute result |> contains(ineligible_user_after_date)
@@ -99,6 +98,44 @@ defmodule Lightning.UsageTracking.UserQueriesTest do
         result
         |> contains(ineligible_user_disabled_inserted_after_disabled_after_2)
       )
+    end
+  end
+
+  describe "enabled_users/2" do
+    test "returns subset of user list that are enabled on or before the date" do
+      eligible_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-05 23:59:59Z]
+      )
+      eligible_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      eligible_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      ineligible_user_after_date = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-06 00:00:01Z]
+      )
+
+      user_list = [
+        eligible_user_1,
+        ineligible_user_after_date,
+        eligible_user_3
+      ]
+
+      result = UserQueries.enabled_users(@date) |> Repo.all()
+
+      refute result |> contains(eligible_user_1)
+      refute result |> contains(eligible_user_3)
+      refute result |> contains(eligible_user_2)
+      refute result |> contains(ineligible_user_after_date)
     end
   end
 

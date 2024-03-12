@@ -15,6 +15,10 @@ defmodule Lightning.UsageTracking.UserQueries do
           u.updated_at > ^report_time
   end
 
+  def enabled_users(_date, _user_list) do
+    User
+  end
+
   def active_users(date) do
     report_time = report_date_as_time(date)
 

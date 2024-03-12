@@ -5,6 +5,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   alias Lightning.Workflows.Workflow
   alias Lightning.UsageTracking.Configuration
   alias Lightning.UsageTracking.ConfigurationManagementService
+  # alias Lightning.UsageTracking.ProjectMetricsService
   alias Lightning.UsageTracking.ReportData
 
   def setup do
@@ -295,8 +296,9 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
-    test "includes the operating system details",
-         %{config: config, cleartext_enabled: enabled} do
+    test "includes the operating system details", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
       {_os_family, os_name_atom} = :os.type()
 
       os_name = os_name_atom |> Atom.to_string()
@@ -305,26 +307,37 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       assert(
         %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(config, enabled)
+          ReportData.generate(report_config, enabled, date)
       )
     end
 
-    test "includes project details",
-         %{config: config, cleartext_enabled: enabled} do
+    test "includes project details", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
       project_1 = build_project(2)
       project_2 = build_project(3)
 
-      %{projects: projects} = ReportData.generate(config, enabled)
+      %{projects: projects} = ReportData.generate(report_config, enabled, date)
 
       assert projects |> count() == 2
 
-      projects |> assert_instrumented(project_1, enabled)
-      projects |> assert_instrumented(project_2, enabled)
+      projects
+      |> assert_project_metrics(
+        project: project_1,
+        cleartext_enabled: enabled,
+        date: date
+      )
+      projects
+      |> assert_project_metrics(
+        project: project_2,
+        cleartext_enabled: enabled,
+        date: date
+      )
     end
 
-    test "indicates the version of the report data structure in use",
-         %{config: config, cleartext_enabled: enabled} do
-      assert %{version: "1"} = ReportData.generate(config, enabled)
+    test "indicates the version of the report data structure in use", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      assert %{version: "2"} = ReportData.generate(report_config, enabled, date)
     end
   end
 
@@ -447,8 +460,9 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
-    test "includes the operating system details",
-         %{config: config, cleartext_enabled: enabled} do
+    test "includes the operating system details", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
       {_os_family, os_name_atom} = :os.type()
 
       os_name = os_name_atom |> Atom.to_string()
@@ -457,26 +471,37 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       assert(
         %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(config, enabled)
+          ReportData.generate(report_config, enabled, date)
       )
     end
 
-    test "includes project details",
-         %{config: config, cleartext_enabled: enabled} do
+    test "includes project details", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
       project_1 = build_project(2)
       project_2 = build_project(3)
 
-      %{projects: projects} = ReportData.generate(config, enabled)
+      %{projects: projects} = ReportData.generate(report_config, enabled, date)
 
       assert projects |> count() == 2
 
-      projects |> assert_instrumented(project_1, enabled)
-      projects |> assert_instrumented(project_2, enabled)
+      projects
+      |> assert_project_metrics(
+        project: project_1,
+        cleartext_enabled: enabled,
+        date: date
+      )
+      projects
+      |> assert_project_metrics(
+        project: project_2,
+        cleartext_enabled: enabled,
+        date: date
+      )
     end
 
-    test "indicates the version of the report data structure in use",
-         %{config: config, cleartext_enabled: enabled} do
-      assert %{version: "1"} = ReportData.generate(config, enabled)
+    test "indicates the version of the report data structure in use", config do
+      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+
+      assert %{version: "2"} = ReportData.generate(report_config, enabled, date)
     end
   end
 
@@ -603,8 +628,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     hashed_uuid = build_hash(identity)
 
     instrumented_collection
-    |> Enum.filter(fn record -> record.hashed_uuid == hashed_uuid end)
-    |> hd()
+    |> Enum.find(fn record -> record.hashed_uuid == hashed_uuid end)
   end
 
   defp assert_cleartext_uuid(instrumented_record, id, _enabled = true) do
@@ -617,5 +641,21 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
   defp no_of_steps(runs) do
     runs |> Enum.reduce(0, fn run, acc -> acc + (run.steps |> count()) end)
+  end
+
+  defp assert_project_metrics(projects_metrics, opts) do
+    project = opts |> Keyword.get(:project)
+    _cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
+    _date = opts |> Keyword.get(:date)
+
+    # %Project{id: id, users: users, workflows: workflows} =
+    #   project |> Repo.preload([:users, :workflows])
+
+    project_metrics = projects_metrics |> find_instrumentation(project.id)
+    # expected_metrics =
+    #   ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
+    expected_metrics = %{fix: "me"}
+
+    assert project_metrics == expected_metrics
   end
 end

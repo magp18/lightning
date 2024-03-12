@@ -89,6 +89,39 @@ defmodule Lightning.UsageTracking.UserServiceTest do
     end
   end
 
+  describe ".no_of_users/2" do
+    test "returns enabled subset of user list" do
+      eligible_user_1 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-05 23:59:59Z]
+      )
+      _eligible_user_2 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      eligible_user_3 = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-04 01:00:00Z]
+      )
+      ineligible_user_after_date = insert(
+        :user,
+        disabled: false,
+        inserted_at: ~U[2024-02-06 00:00:01Z]
+      )
+
+      user_list = [
+        eligible_user_1,
+        ineligible_user_after_date,
+        eligible_user_3
+      ]
+
+      assert UserService.no_of_users(@date, user_list) == 2
+    end
+  end
+
   describe ".no_of_active_users/1" do
     test "returns a count of all active, enabled users" do
       within_threshold_date = Date.add(@date, -29)
