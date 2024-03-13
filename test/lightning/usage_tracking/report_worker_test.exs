@@ -45,7 +45,8 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
     test "persists a report indicating successful submission", config do
       %{expected_report_data: expected_report_data} = config
 
-      persisted_report_data = expected_report_data |> stringify_keys()
+      %{"instance" => expected_instance_data} =
+        expected_report_data |> stringify_keys()
 
       report_date = @date
 
@@ -60,7 +61,7 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
         %Report{
           submitted: true,
           report_date: ^report_date,
-          data: ^persisted_report_data 
+          data: %{"instance" => ^expected_instance_data} 
         } = report
       )
       assert DateTime.diff(DateTime.utc_now(), report.submitted_at, :second) < 2
@@ -69,7 +70,8 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
     test "persists a report indicating unsuccessful submission", config do
       %{expected_report_data: expected_report_data} = config
 
-      persisted_report_data = expected_report_data |> stringify_keys()
+      %{"instance" => expected_instance_data} =
+        expected_report_data |> stringify_keys()
 
       report_date = @date
 
@@ -84,7 +86,7 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
         %Report{
           submitted: false,
           report_date: ^report_date,
-          data: ^persisted_report_data,
+          data: %{"instance" => ^expected_instance_data},
           submitted_at: nil,
         } = report
       )
@@ -147,7 +149,17 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
     map
     |> Map.keys()
     |> Enum.reduce(%{}, fn key, acc ->
-      acc |> Map.merge(%{to_string(key) => map[key]})
+      acc |> stringify_key(key, map[key])
     end)
+  end
+
+  defp stringify_key(acc, key, val) when is_map(val) and not is_struct(val) do
+    acc
+    |> Map.merge(%{to_string(key) => stringify_keys(val)})
+  end
+
+  defp stringify_key(acc, key, val) do
+    acc
+    |> Map.merge(%{to_string(key) => val})
   end
 end
