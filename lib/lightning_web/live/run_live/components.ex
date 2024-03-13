@@ -347,6 +347,7 @@ defmodule LightningWeb.RunLive.Components do
 
   def run_item(%{run: run} = assigns) do
     steps = run.steps
+
     last_step = List.last(steps)
 
     assigns =
@@ -385,7 +386,7 @@ defmodule LightningWeb.RunLive.Components do
       DateTime.compare(assigns.step.inserted_at, assigns.run.inserted_at) ==
         :lt
 
-    base_classes = ~w(grid grid-cols-8 items-center)
+    base_classes = ~w(grid grid-cols-6 items-center)
 
     step_item_classes =
       if is_clone, do: base_classes ++ ~w(opacity-50), else: base_classes
@@ -410,6 +411,7 @@ defmodule LightningWeb.RunLive.Components do
             >
               <span><%= @step.job.name %></span>
             </.link>
+
             <%= if @is_clone do %>
               <div class="flex gap-1">
                 <span
@@ -428,34 +430,25 @@ defmodule LightningWeb.RunLive.Components do
                 </span>
               </div>
             <% end %>
-            <div class="flex gap-1 text-xs leading-5">
-              <%= if @can_run_workflow && @step.exit_reason do %>
-                <.step_rerun_tag {assigns} />/
-              <% end %>
-              <.link
-                class="text-indigo-400 hover:underline hover:underline-offset-2 hover:text-indigo-500 cursor-pointer"
-                navigate={
+
+            <%= if @can_run_workflow && @step.exit_reason do %>
+              <.step_rerun_tag {assigns} />
+            <% end %>
+            <.link
+              class="hover:text-primary-400 cursor-pointer"
+              navigate={
                 ~p"/projects/#{@project_id}/w/#{@step.job.workflow_id}"
                   <> "?a=#{@run.id}&m=expand&s=#{@step.job_id}"
               }
-              >
-                inspect
-              </.link>
-            </div>
+            >
+              <.icon
+                name="hero-document-magnifying-glass-mini"
+                title="Inspect Step"
+                class="h-4 w-4 mb-2"
+              />
+            </.link>
           </div>
         </div>
-      </div>
-      <div
-        role="cell"
-        class="py-2 px-4 text-sm font-normal text-left rtl:text-right text-gray-500"
-      >
-        --
-      </div>
-      <div
-        role="cell"
-        class="py-2 px-4 text-sm font-normal text-left rtl:text-right text-gray-500"
-      >
-        --
       </div>
       <div
         class="py-2 px-4 text-sm font-normal text-left rtl:text-right text-gray-500"
@@ -469,7 +462,9 @@ defmodule LightningWeb.RunLive.Components do
       >
         <.timestamp timestamp={@step.finished_at} style={:wrapped} />
       </div>
-      <div role="cell"></div>
+      <div class="py-2 px-4 text-xs text-gray-500 font-mono" role="cell">
+        <%= @step.exit_reason %><%= if @step.error_type, do: ":#{@step.error_type}" %>
+      </div>
     </div>
     """
   end
@@ -479,18 +474,18 @@ defmodule LightningWeb.RunLive.Components do
     <%= if @step.input_dataclip && is_nil(@step.input_dataclip.wiped_at) do %>
       <span
         id={@step.id}
-        class="text-indigo-400 hover:underline hover:underline-offset-2 hover:text-indigo-500 cursor-pointer"
+        class="hover:text-primary-400 cursor-pointer"
         phx-click="rerun"
         phx-value-run_id={@run.id}
         phx-value-step_id={@step.id}
         title="Rerun workflow from here"
       >
-        rerun
+        <.icon name="hero-arrow-path-mini" class="h-5 w-5 mb-2" />
       </span>
     <% else %>
       <span
         id={@step.id}
-        class="text-indigo-300 cursor-pointer"
+        class="cursor-pointer"
         phx-hook="Tooltip"
         data-placement="top"
         data-allow-html="true"
@@ -501,7 +496,7 @@ defmodule LightningWeb.RunLive.Components do
           )
         }
       >
-        rerun
+        <Heroicons.arrow_path class="h-5 w-5" />
       </span>
     <% end %>
     """

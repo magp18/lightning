@@ -161,7 +161,7 @@ defmodule LightningWeb.WorkflowLive.Edit do
                       <% else %>
                         <%= if step_retryable?(@step, @manual_run_form, @selectable_dataclips) do %>
                           <.icon name="hero-arrow-path-mini" class="w-4 h-4 mr-1" />
-                          Rerun from here
+                          Retry from here
                         <% else %>
                           <.icon name="hero-play-solid" class="w-4 h-4 mr-1" />
                           Create New Work Order
