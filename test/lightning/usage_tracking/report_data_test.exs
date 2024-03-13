@@ -5,7 +5,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
   alias Lightning.Workflows.Workflow
   alias Lightning.UsageTracking.Configuration
   alias Lightning.UsageTracking.ConfigurationManagementService
-  # alias Lightning.UsageTracking.ProjectMetricsService
+  alias Lightning.UsageTracking.ProjectMetricsService
   alias Lightning.UsageTracking.ReportData
 
   def setup do
@@ -547,7 +547,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       end
     end
 
-    project
+    project |> Repo.preload([:users, workflows: [:jobs, runs: [:steps]]])
   end
 
   defp build_project_users(count) do
@@ -645,16 +645,12 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
   defp assert_project_metrics(projects_metrics, opts) do
     project = opts |> Keyword.get(:project)
-    _cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
-    _date = opts |> Keyword.get(:date)
-
-    # %Project{id: id, users: users, workflows: workflows} =
-    #   project |> Repo.preload([:users, :workflows])
+    cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
+    date = opts |> Keyword.get(:date)
 
     project_metrics = projects_metrics |> find_instrumentation(project.id)
-    # expected_metrics =
-    #   ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
-    expected_metrics = %{fix: "me"}
+    expected_metrics =
+      ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
 
     assert project_metrics == expected_metrics
   end
