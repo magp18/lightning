@@ -20,15 +20,17 @@ defmodule Lightning.UsageTracking.ReportWorker do
 
     env = Application.get_env(:lightning, :usage_tracking)
 
-    config = ConfigurationManagementService.find()
+    if env[:enabled] do
+      config = ConfigurationManagementService.find()
 
-    cleartext_uuids_enabled = env[:cleartext_uuids_enabled]
+      cleartext_uuids_enabled = env[:cleartext_uuids_enabled]
 
-    host = env[:host]
+      host = env[:host]
 
-    data = ReportData.generate(config, cleartext_uuids_enabled, date)
+      data = ReportData.generate(config, cleartext_uuids_enabled, date)
 
-    Client.submit_metrics(%{foo: :bar}, host) |> create_report(data, date)
+      Client.submit_metrics(data, host) |> create_report(data, date)
+    end
 
     :ok
   end
