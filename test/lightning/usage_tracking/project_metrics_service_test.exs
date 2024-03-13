@@ -2,6 +2,7 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
   use Lightning.DataCase
 
   alias Lightning.UsageTracking.ProjectMetricsService
+  alias Lightning.UsageTracking.WorkflowMetricsService
 
   @active_user_threshold_time ~U[2024-01-07 00:00:00Z]
   @date ~D[2024-02-05]
@@ -181,22 +182,8 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
     project = insert(:project, id: project_id, project_users: build_project_users(count))
 
     insert_list(count, :workflow, project: project)
-    #
-    # for workflow <- workflows do
-    #   [job | _] = insert_list(count, :job, workflow: workflow)
-    #   work_orders = insert_list(count, :workorder, workflow: workflow)
-    #
-    #   for work_order <- work_orders do
-    #     insert_runs_with_steps(
-    #       count: count,
-    #       project: project,
-    #       work_order: work_order,
-    #       job: job
-    #     )
-    #   end
-    # end
 
-    project |> Repo.preload([:users, :workflows])
+    project |> Repo.preload([:users, workflows: [:jobs, :runs]])
   end
 
   defp build_project_users(count) do
@@ -245,16 +232,12 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
 
   defp assert_workflow_metrics(workflows_metrics, opts) do
     workflow = opts |> Keyword.get(:workflow)
-    _cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
-    _date = opts |> Keyword.get(:date)
-
-    # %Project{id: id, users: users, workflows: workflows} =
-    #   project |> Repo.preload([:users, :workflows])
+    cleartext_enabled = opts |> Keyword.get(:cleartext_enabled)
+    date = opts |> Keyword.get(:date)
 
     workflow_metrics = workflows_metrics |> find_instrumentation(workflow.id)
-    # expected_metrics =
-    #   WorkflowMetricsService.generate_metrics(workflow, cleartext_enabled, date)
-    expected_metrics = %{fix: "me"}
+    expected_metrics =
+      WorkflowMetricsService.generate_metrics(workflow, cleartext_enabled, date)
 
     assert workflow_metrics == expected_metrics
   end

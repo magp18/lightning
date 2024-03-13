@@ -5,7 +5,9 @@ defmodule Lightning.UsageTracking.WorkflowMetricsService do
   def generate_metrics(workflow, cleartext_enabled, date) do
     runs = RunService.finished_runs(workflow.runs, date)
     steps = RunService.finished_steps(workflow.runs, date)
+    active_jobs = RunService.unique_jobs(steps, date)
     %{
+      no_of_active_jobs: Enum.count(active_jobs),
       no_of_jobs: Enum.count(workflow.jobs),
       no_of_runs: Enum.count(runs),
       no_of_steps: Enum.count(steps)
