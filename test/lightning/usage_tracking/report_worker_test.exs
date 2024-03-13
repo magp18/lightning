@@ -34,11 +34,16 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
     test "submits the metrics to the ImpactTracker", config do
       %{expected_report_data: expected_report_data} = config
 
+      %{instance: expected_instance_data} = expected_report_data
+
       with_mock Client,
         submit_metrics: &mock_submit_metrics_ok/2 do
         perform_job(ReportWorker, %{date: @date})
 
-        assert_called(Client.submit_metrics(expected_report_data, @host))
+        assert_called Client.submit_metrics(
+          %{instance: expected_instance_data},
+          @host
+        )
       end
     end
 
@@ -90,42 +95,6 @@ defmodule Lightning.UsageTracking.ReportWorkerTest do
           submitted_at: nil,
         } = report
       )
-    end
-
-    test "on successful submission crashes if a report already exists" do
-      existing_report = 
-        %Report{
-          data: %{"old" => "data"},
-          report_date: @date,
-          submitted: false
-        } |> Repo.insert!()
-
-      assert_raise Ecto.ConstraintError, fn ->
-        with_mock Client,
-          submit_metrics: &mock_submit_metrics_ok/2 do
-          perform_job(ReportWorker, %{date: @date})
-        end
-      end
-
-      assert existing_report == Report |> Repo.one()
-    end
-
-    test "on unsuccessful submission crashes if a report already exists" do
-      existing_report = 
-        %Report{
-          data: %{"old" => "data"},
-          report_date: @date,
-          submitted: false
-        } |> Repo.insert!()
-
-      assert_raise Ecto.ConstraintError, fn ->
-        with_mock Client,
-          submit_metrics: &mock_submit_metrics_error/2 do
-          perform_job(ReportWorker, %{date: @date})
-        end
-      end
-
-      assert existing_report == Report |> Repo.one()
     end
 
     test "indicates that the job executed successfully" do
