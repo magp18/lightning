@@ -270,7 +270,7 @@ defmodule LightningWeb.RunLive.Components do
               }>
               <.icon
                 title="Inspect Step"
-                name="hero-document-magnifying-glass-mini"
+                name="hero-code-bracket-square-mini"
                 class="h-4 w-4 mb-2 hover:text-primary-400"
               />
             </.link>
@@ -400,7 +400,7 @@ defmodule LightningWeb.RunLive.Components do
         role="cell"
         class="col-span-3 py-2 text-sm font-normal text-left rtl:text-right text-gray-500"
       >
-        <div class="flex pl-28">
+        <div class="flex pl-4">
           <.step_icon reason={@step.exit_reason} error_type={@step.error_type} />
           <div class="text-gray-800 flex gap-2 text-sm">
             <.link
@@ -442,7 +442,7 @@ defmodule LightningWeb.RunLive.Components do
               }
             >
               <.icon
-                name="hero-document-magnifying-glass-mini"
+                name="hero-code-bracket-square-mini"
                 title="Inspect Step"
                 class="h-4 w-4 mb-2"
               />
@@ -480,7 +480,7 @@ defmodule LightningWeb.RunLive.Components do
         phx-value-step_id={@step.id}
         title="Rerun workflow from here"
       >
-        <.icon name="hero-arrow-path-mini" class="h-5 w-5 mb-2" />
+        <.icon name="hero-play-mini" class="h-4 w-4 mb-1" />
       </span>
     <% else %>
       <span

@@ -226,14 +226,14 @@ defmodule LightningWeb.RunLive.WorkOrderComponent do
             class={
               if index != Enum.count(@runs) and !@show_prev_runs,
                 do: "hidden",
-                else: ""
+                else: "outline outline-2 outline-gray-300 rounded mt-2 mb-4 mx-4"
             }
           >
             <div
               class="flex bg-gray-200 text-xs py-2 grid grid-cols-6"
               role="rowgroup"
             >
-              <div role="columnheader" class="col-span-3 pl-28">
+              <div role="columnheader" class="col-span-3 pl-4">
                 Run
                 <.link navigate={~p"/projects/#{@project.id}/runs/#{run.id}"}>
                   <span
@@ -263,6 +263,8 @@ defmodule LightningWeb.RunLive.WorkOrderComponent do
                     </span>
                   <% end %>
                 <% end %>
+              </div>
+              <div role="columnheader" class="col-span-2 px-4">
                 <%= case run.state do %>
                   <% :available -> %>
                     enqueued @ <.timestamp timestamp={run.inserted_at} />
@@ -271,17 +273,11 @@ defmodule LightningWeb.RunLive.WorkOrderComponent do
                   <% :started -> %>
                     started @ <.timestamp timestamp={run.started_at} />
                   <% _state -> %>
-                    <%= run.state %> @ <.timestamp timestamp={run.finished_at} />
+                    finished @ <.timestamp timestamp={run.finished_at} />
                 <% end %>
               </div>
               <div role="columnheader" class="col-span-1 px-4">
-                <small>Step Start</small>
-              </div>
-              <div role="columnheader" class="col-span-1 px-4">
-                <small>Step End</small>
-              </div>
-              <div role="columnheader" class="col-span-1 px-4">
-                <small>Step Exit Reason</small>
+                <%= run.state %>
               </div>
             </div>
 

@@ -155,15 +155,15 @@ defmodule LightningWeb.WorkflowLive.Edit do
                     >
                       <%= if processing(@follow_run) do %>
                         <.icon
-                          name="hero-arrow-path-mini"
+                          name="hero-play-mini"
                           class="w-4 h-4 animate-spin mr-1"
                         /> Processing
                       <% else %>
                         <%= if step_retryable?(@step, @manual_run_form, @selectable_dataclips) do %>
-                          <.icon name="hero-arrow-path-mini" class="w-4 h-4 mr-1" />
+                          <.icon name="hero-play-mini" class="w-4 h-4 mr-1" />
                           Retry from here
                         <% else %>
-                          <.icon name="hero-play-solid" class="w-4 h-4 mr-1" />
+                          <.icon name="hero-play-mini" class="w-4 h-4 mr-1" />
                           Create New Work Order
                         <% end %>
                       <% end %>
@@ -518,7 +518,7 @@ defmodule LightningWeb.WorkflowLive.Edit do
 
     ~H"""
     <.link patch={"#{@base_url}?s=#{@job.id}&m=expand"} class={@button_classes}>
-      <.icon name="hero-code-bracket-mini" class="w-4 h-4 text-grey-400" />
+      <.icon name="hero-code-bracket" class="w-4 h-4 text-grey-400" />
     </.link>
 
     <.save_is_blocked_error :if={@is_empty}>
