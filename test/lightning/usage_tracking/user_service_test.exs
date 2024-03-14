@@ -124,10 +124,10 @@ defmodule Lightning.UsageTracking.UserServiceTest do
 
   describe ".no_of_active_users/1" do
     test "returns a count of all active, enabled users" do
-      within_threshold_date = Date.add(@date, -29)
+      within_threshold_date = Date.add(@date, -89)
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
-      outside_threshold_date = Date.add(@date, -30)
+      outside_threshold_date = Date.add(@date, -90)
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 
@@ -171,10 +171,10 @@ defmodule Lightning.UsageTracking.UserServiceTest do
 
   describe ".no_of_active_users/2" do
     test "returns active subset of user list" do
-      within_threshold_date = Date.add(@date, -29)
+      within_threshold_date = Date.add(@date, -89)
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
-      outside_threshold_date = Date.add(@date, -30)
+      outside_threshold_date = Date.add(@date, -90)
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 

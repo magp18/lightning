@@ -26,7 +26,7 @@ defmodule Lightning.UsageTracking.UserQueries do
 
     {:ok, threshold_time, _offset} =
       date
-      |> Date.add(-30)
+      |> Date.add(-90)
       |> then(& "#{&1}T23:59:59Z")
       |> DateTime.from_iso8601()
 
