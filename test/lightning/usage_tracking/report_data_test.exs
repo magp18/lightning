@@ -323,17 +323,20 @@ defmodule Lightning.UsageTracking.ReportDataTest do
                ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes project details", %{
+    test "includes project details for projects created before date", %{
       cleartext_enabled: enabled,
       config: report_config,
       date: date
     } do
-      project_1 = build_project(2)
-      project_2 = build_project(3)
+      after_date = Date.add(date, 1)
+
+      project_1 = build_project(2, date)
+      project_2 = build_project(5, after_date)
+      project_3 = build_project(3, date)
 
       %{projects: projects} = ReportData.generate(report_config, enabled, date)
 
-      assert projects |> count() == 2
+      # assert projects |> count() == 2
 
       projects
       |> assert_project_metrics(
@@ -344,10 +347,12 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       projects
       |> assert_project_metrics(
-        project: project_2,
+        project: project_3,
         cleartext_enabled: enabled,
         date: date
       )
+
+      projects |> assert_no_project_metrics(project_2)
     end
 
     test "indicates the version of the report data structure in use", %{
@@ -518,17 +523,20 @@ defmodule Lightning.UsageTracking.ReportDataTest do
                ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes project details", %{
+    test "includes project details for projects created before date", %{
       cleartext_enabled: enabled,
       config: report_config,
       date: date
     } do
-      project_1 = build_project(2)
-      project_2 = build_project(3)
+      after_date = Date.add(date, 1)
+
+      project_1 = build_project(2, date)
+      project_2 = build_project(5, after_date)
+      project_3 = build_project(3, date)
 
       %{projects: projects} = ReportData.generate(report_config, enabled, date)
 
-      assert projects |> count() == 2
+      # assert projects |> count() == 2
 
       projects
       |> assert_project_metrics(
@@ -539,10 +547,12 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       projects
       |> assert_project_metrics(
-        project: project_2,
+        project: project_3,
         cleartext_enabled: enabled,
         date: date
       )
+
+      projects |> assert_no_project_metrics(project_2)
     end
 
     test "indicates the version of the report data structure in use", %{
@@ -599,6 +609,37 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     project |> Repo.preload([:users, workflows: [:jobs, runs: [:steps]]])
   end
 
+  defp build_project(count, date) do
+    {:ok, inserted_at, _offset} = DateTime.from_iso8601("#{date}T10:11:12Z")
+
+    project =
+      insert(
+        :project,
+        name: "proj-#{count}",
+        inserted_at: inserted_at,
+        project_users: build_project_users(count)
+      )
+
+    workflows = insert_list(1, :workflow, name: "wf-#{count}", project: project)
+
+    for workflow <- workflows do
+      [job | _] = insert_list(count, :job, workflow: workflow)
+      work_orders = insert_list(count, :workorder, workflow: workflow)
+
+      for work_order <- work_orders do
+        insert_runs_with_steps(
+          count: count,
+          project: project,
+          work_order: work_order,
+          job: job,
+          finished_at: inserted_at
+        )
+      end
+    end
+
+    project |> Repo.preload([:users, workflows: [:jobs, runs: [steps: [:job]]]])
+  end
+
   defp build_project_users(count) do
     build_list(count, :project_user, user: fn -> build(:user) end)
   end
@@ -608,12 +649,14 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     project = Keyword.get(options, :project)
     work_order = Keyword.get(options, :work_order)
     job = Keyword.get(options, :job)
+    finished_at = Keyword.get(options, :finished_at)
 
     dataclip_builder = fn -> build(:dataclip, project: project) end
 
     insert_list(
       count,
       :run,
+      finished_at: finished_at,
       work_order: work_order,
       dataclip: dataclip_builder,
       starting_job: job,
@@ -621,6 +664,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
         build_list(
           count,
           :step,
+          finished_at: finished_at,
           input_dataclip: dataclip_builder,
           output_dataclip: dataclip_builder,
           job: job
@@ -703,5 +747,9 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
 
     assert project_metrics == expected_metrics
+  end
+
+  defp assert_no_project_metrics(projects_metrics, project) do
+    refute projects_metrics |> find_instrumentation(project.id)
   end
 end

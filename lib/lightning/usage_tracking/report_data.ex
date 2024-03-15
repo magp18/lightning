@@ -96,7 +96,7 @@ defmodule Lightning.UsageTracking.ReportData do
   defp instrument_projects(cleartext_enabled, date) do
     Repo.all(
       from p in Project,
-        preload: [:users, [workflows: [:jobs, runs: [:steps]]]]
+        preload: [:users, [workflows: [:jobs, runs: [steps: [:job]]]]]
     )
     |> Enum.map(fn project ->
       ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
