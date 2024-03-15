@@ -259,10 +259,10 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     test "includes the total number of active users", config do
       %{config: report_config, cleartext_enabled: enabled, date: date} = config
 
-      within_threshold_date = Date.add(date, -29)
+      within_threshold_date = Date.add(date, -89)
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
-      outside_threshold_date = Date.add(date, -30)
+      outside_threshold_date = Date.add(date, -90)
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 
@@ -423,10 +423,10 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     test "includes the total number of active users", config do
       %{config: report_config, cleartext_enabled: enabled, date: date} = config
 
-      within_threshold_date = Date.add(date, -29)
+      within_threshold_date = Date.add(date, -89)
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
-      outside_threshold_date = Date.add(date, -30)
+      outside_threshold_date = Date.add(date, -90)
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 

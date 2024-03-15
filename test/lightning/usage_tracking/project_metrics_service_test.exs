@@ -4,7 +4,7 @@ defmodule Lightning.UsageTracking.ProjectMetricsServiceTest do
   alias Lightning.UsageTracking.ProjectMetricsService
   alias Lightning.UsageTracking.WorkflowMetricsService
 
-  @active_user_threshold_time ~U[2024-01-07 00:00:00Z]
+  @active_user_threshold_time ~U[2023-11-08 00:00:00Z]
   @date ~D[2024-02-05]
   @hashed_id "EECF8CFDD120E8DF8D9A12CA92AC3E815908223F95CFB11F19261A3C0EB34AEC"
   @project_id "3cfb674b-e878-470d-b7c0-cfa8f7e003ae"
