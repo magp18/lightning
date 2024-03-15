@@ -34,10 +34,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
     test "cleartext uuid of reporting instance is nil",
          %{config: config, cleartext_enabled: enabled} do
-      assert(
-        %{instance: %{cleartext_uuid: nil}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{cleartext_uuid: nil}} =
+               ReportData.generate(config, enabled)
     end
 
     test "indicates the version of lightning present on the instance",
@@ -55,10 +53,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       _eligible_user_3 = insert(:user, disabled: false)
       _ineligible_user = insert(:user, disabled: true)
 
-      assert(
-        %{instance: %{no_of_users: 3}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{no_of_users: 3}} =
+               ReportData.generate(config, enabled)
     end
 
     test "includes the operating system details",
@@ -69,10 +65,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       assert String.match?(os_name, ~r/.{5,}/)
 
-      assert(
-        %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{operating_system: ^os_name}} =
+               ReportData.generate(config, enabled)
     end
 
     test "includes project details",
@@ -118,10 +112,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
          %{config: config, cleartext_enabled: enabled} do
       %{instance_id: instance_id} = config
 
-      assert(
-        %{instance: %{cleartext_uuid: ^instance_id}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{cleartext_uuid: ^instance_id}} =
+               ReportData.generate(config, enabled)
     end
 
     test "indicates the version of lightning present on the instance",
@@ -139,10 +131,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       _eligible_user_3 = insert(:user, disabled: false)
       _ineligible_user = insert(:user, disabled: true)
 
-      assert(
-        %{instance: %{no_of_users: 3}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{no_of_users: 3}} =
+               ReportData.generate(config, enabled)
     end
 
     test "includes the operating system details",
@@ -153,10 +143,8 @@ defmodule Lightning.UsageTracking.ReportDataTest do
 
       assert String.match?(os_name, ~r/.{5,}/)
 
-      assert(
-        %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(config, enabled)
-      )
+      assert %{instance: %{operating_system: ^os_name}} =
+               ReportData.generate(config, enabled)
     end
 
     test "includes project details",
@@ -185,18 +173,22 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       :setup_date
     ]
 
-    test "sets the time that the report was generated at", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "sets the time that the report was generated at", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       %{generated_at: generated_at} =
         ReportData.generate(report_config, enabled, date)
 
       assert DateTime.diff(DateTime.utc_now(), generated_at, :second) < 1
     end
 
-    test "contains hashed uuid of reporting instance", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "contains hashed uuid of reporting instance", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       %{instance_id: instance_id} = report_config
 
       %{instance: %{hashed_uuid: hashed_uuid}} =
@@ -205,19 +197,21 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       assert hashed_uuid == build_hash(instance_id)
     end
 
-    test "cleartext uuid of reporting instance is nil", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
-      assert(
-        %{
-          instance: %{cleartext_uuid: nil}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+    test "cleartext uuid of reporting instance is nil", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
+      assert %{
+               instance: %{cleartext_uuid: nil}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "indicates the version of lightning present on the instance", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "indicates the version of lightning present on the instance", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       # Temporarily water-down the test to address constraints imposed by CI.
       %{instance: %{version: version}} =
         ReportData.generate(report_config, enabled, date)
@@ -225,94 +219,115 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       assert String.match?(version, ~r/\A\d+\.\d+\.\d+\z/)
     end
 
-    test "includes the total number of non-disabled users", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-      _eligible_user_1 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _eligible_user_2 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _eligible_user_3 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _ineligible_user = insert(
-        :user,
-        disabled: true,
-        inserted_at: ~U[2024-02-04 01:00:00Z],
-        updated_at: ~U[2024-02-04 01:00:00Z]
-      )
+    test "includes the total number of non-disabled users", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
+      _eligible_user_1 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
 
-      assert(
-        %{
-          instance: %{no_of_users: 3}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+      _eligible_user_2 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _eligible_user_3 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _ineligible_user =
+        insert(
+          :user,
+          disabled: true,
+          inserted_at: ~U[2024-02-04 01:00:00Z],
+          updated_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      assert %{
+               instance: %{no_of_users: 3}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes the total number of active users", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "includes the total number of active users", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       within_threshold_date = Date.add(date, -89)
+
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
+
       outside_threshold_date = Date.add(date, -90)
+
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 
-      enabled_user_1 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _active_token = insert(
-        :user_token,
-        context: "session",
-        inserted_at: within_threshold_time,
-        user: enabled_user_1
-      )
-      enabled_user_2 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _inactive_token = insert(
-        :user_token,
-        context: "session",
-        inserted_at: outside_threshold_time,
-        user: enabled_user_2
-      )
+      enabled_user_1 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
 
-      assert(
-        %{
-          instance: %{no_of_active_users: 1}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+      _active_token =
+        insert(
+          :user_token,
+          context: "session",
+          inserted_at: within_threshold_time,
+          user: enabled_user_1
+        )
+
+      enabled_user_2 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _inactive_token =
+        insert(
+          :user_token,
+          context: "session",
+          inserted_at: outside_threshold_time,
+          user: enabled_user_2
+        )
+
+      assert %{
+               instance: %{no_of_active_users: 1}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes the operating system details", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "includes the operating system details", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       {_os_family, os_name_atom} = :os.type()
 
       os_name = os_name_atom |> Atom.to_string()
 
       assert String.match?(os_name, ~r/.{5,}/)
 
-      assert(
-        %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(report_config, enabled, date)
-      )
+      assert %{instance: %{operating_system: ^os_name}} =
+               ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes project details", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+    test "includes project details", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       project_1 = build_project(2)
       project_2 = build_project(3)
 
@@ -326,6 +341,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
         cleartext_enabled: enabled,
         date: date
       )
+
       projects
       |> assert_project_metrics(
         project: project_2,
@@ -334,9 +350,11 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
-    test "indicates the version of the report data structure in use", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "indicates the version of the report data structure in use", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       assert %{version: "2"} = ReportData.generate(report_config, enabled, date)
     end
   end
@@ -348,18 +366,22 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       :setup_date
     ]
 
-    test "sets the time that the report was generated at", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "sets the time that the report was generated at", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       %{generated_at: generated_at} =
         ReportData.generate(report_config, enabled, date)
 
       assert DateTime.diff(DateTime.utc_now(), generated_at, :second) < 1
     end
 
-    test "contains hashed uuid of reporting instance", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "contains hashed uuid of reporting instance", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       %{instance_id: instance_id} = report_config
 
       %{instance: %{hashed_uuid: hashed_uuid}} =
@@ -368,20 +390,23 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       assert hashed_uuid == build_hash(instance_id)
     end
 
-    test "cleartext uuid of reporting instance is populated", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+    test "cleartext uuid of reporting instance is populated", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       %{instance_id: instance_id} = report_config
 
-      assert(
-        %{
-          instance: %{cleartext_uuid: ^instance_id}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+      assert %{
+               instance: %{cleartext_uuid: ^instance_id}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "indicates the version of lightning present on the instance", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "indicates the version of lightning present on the instance", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       # Temporarily water-down the test to address constraints imposed by CI.
       %{instance: %{version: version}} =
         ReportData.generate(report_config, enabled, date)
@@ -389,94 +414,115 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       assert String.match?(version, ~r/\A\d+\.\d+\.\d+\z/)
     end
 
-    test "includes the total number of non-disabled users", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-      _eligible_user_1 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _eligible_user_2 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _eligible_user_3 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _ineligible_user = insert(
-        :user,
-        disabled: true,
-        inserted_at: ~U[2024-02-04 01:00:00Z],
-        updated_at: ~U[2024-02-04 01:00:00Z]
-      )
+    test "includes the total number of non-disabled users", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
+      _eligible_user_1 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
 
-      assert(
-        %{
-          instance: %{no_of_users: 3}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+      _eligible_user_2 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _eligible_user_3 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _ineligible_user =
+        insert(
+          :user,
+          disabled: true,
+          inserted_at: ~U[2024-02-04 01:00:00Z],
+          updated_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      assert %{
+               instance: %{no_of_users: 3}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes the total number of active users", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "includes the total number of active users", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       within_threshold_date = Date.add(date, -89)
+
       {:ok, within_threshold_time, _offset} =
         DateTime.from_iso8601("#{within_threshold_date}T10:00:00Z")
+
       outside_threshold_date = Date.add(date, -90)
+
       {:ok, outside_threshold_time, _offset} =
         DateTime.from_iso8601("#{outside_threshold_date}T10:00:00Z")
 
-      enabled_user_1 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _active_token = insert(
-        :user_token,
-        context: "session",
-        inserted_at: within_threshold_time,
-        user: enabled_user_1
-      )
-      enabled_user_2 = insert(
-        :user,
-        disabled: false,
-        inserted_at: ~U[2024-02-04 01:00:00Z]
-      )
-      _inactive_token = insert(
-        :user_token,
-        context: "session",
-        inserted_at: outside_threshold_time,
-        user: enabled_user_2
-      )
+      enabled_user_1 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
 
-      assert(
-        %{
-          instance: %{no_of_active_users: 1}
-        } = ReportData.generate(report_config, enabled, date)
-      )
+      _active_token =
+        insert(
+          :user_token,
+          context: "session",
+          inserted_at: within_threshold_time,
+          user: enabled_user_1
+        )
+
+      enabled_user_2 =
+        insert(
+          :user,
+          disabled: false,
+          inserted_at: ~U[2024-02-04 01:00:00Z]
+        )
+
+      _inactive_token =
+        insert(
+          :user_token,
+          context: "session",
+          inserted_at: outside_threshold_time,
+          user: enabled_user_2
+        )
+
+      assert %{
+               instance: %{no_of_active_users: 1}
+             } = ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes the operating system details", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "includes the operating system details", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       {_os_family, os_name_atom} = :os.type()
 
       os_name = os_name_atom |> Atom.to_string()
 
       assert String.match?(os_name, ~r/.{5,}/)
 
-      assert(
-        %{instance: %{operating_system: ^os_name}} =
-          ReportData.generate(report_config, enabled, date)
-      )
+      assert %{instance: %{operating_system: ^os_name}} =
+               ReportData.generate(report_config, enabled, date)
     end
 
-    test "includes project details", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
+    test "includes project details", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       project_1 = build_project(2)
       project_2 = build_project(3)
 
@@ -490,6 +536,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
         cleartext_enabled: enabled,
         date: date
       )
+
       projects
       |> assert_project_metrics(
         project: project_2,
@@ -498,9 +545,11 @@ defmodule Lightning.UsageTracking.ReportDataTest do
       )
     end
 
-    test "indicates the version of the report data structure in use", config do
-      %{config: report_config, cleartext_enabled: enabled, date: date} = config
-
+    test "indicates the version of the report data structure in use", %{
+      cleartext_enabled: enabled,
+      config: report_config,
+      date: date
+    } do
       assert %{version: "2"} = ReportData.generate(report_config, enabled, date)
     end
   end
@@ -649,6 +698,7 @@ defmodule Lightning.UsageTracking.ReportDataTest do
     date = opts |> Keyword.get(:date)
 
     project_metrics = projects_metrics |> find_instrumentation(project.id)
+
     expected_metrics =
       ProjectMetricsService.generate_metrics(project, cleartext_enabled, date)
 
